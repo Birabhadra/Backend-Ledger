@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
-import welcome from '../templates/welcomeEmail.js'
+import welcome from '../templates/welcomeEmail.js';
+import txnsuccess from '../templates/transactionSuccess.js'
+import txnfailed from '../templates/transactionFailed.js'
 const transporter=nodemailer.createTransport({
     service:'gmail',
     auth:{
@@ -22,7 +24,7 @@ transporter.verify((error,success)=>{
 const sendEmail=async(to,subject,text,html)=>{
     try{
         const info=await transporter.sendMail({
-            from:`Backend-ledger${process.env.EMAIL_USER}`,
+            from:`Backend Ledger <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,
@@ -46,7 +48,38 @@ const sendRegistrationEmail= async (userName,userEmail)=>{
         console.log("Error sending registration email:",error.message)
     }
 }
+const sendTransactionEmail= async (userEmail,name,fromAccount,toAccount,amount,idempotencyKey)=>{
+    try{
+        const subject="Transaction Alert"
+        await sendEmail(
+            userEmail,
+            subject,
+            txnsuccess("DEBIT",name,fromAccount,toAccount,amount,idempotencyKey),
+            txnsuccess("DEBIT",name,fromAccount,toAccount,amount,idempotencyKey)
+        )
+    }catch(error){
+        console.log("Error sending transactional email",error.message)
+    }
+
+
+}
+const sendTransactionFailureEmail= async (userEmail,name,fromAccount,toAccount,amount)=>{
+    try{
+        const subject="Transaction Failed Alert"
+        await sendEmail(
+            userEmail,
+            subject,
+            txnfailed(name,fromAccount,toAccount,amount),
+            txnfailed(name,fromAccount,toAccount,amount)
+        )
+    }catch(error){
+        console.log("Error sending transaction failure email",error.message)
+    }
+}
+
 
 export default {
-    sendRegistrationEmail
+    sendRegistrationEmail,
+    sendTransactionEmail,
+    sendTransactionFailureEmail
 }

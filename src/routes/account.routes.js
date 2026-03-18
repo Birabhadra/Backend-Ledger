@@ -5,4 +5,8 @@ const router=express.Router()
 
 router.post("/",authMiddleWare.authMiddleWare,accountController.createAccountController)
 
+
+router.get('/',authMiddleWare.authMiddleWare,accountController.getUserAccountController)
+
+router.get('/balance/:accountId',authMiddleWare.authMiddleWare,accountController.getUserBalanceController)
 export default router;

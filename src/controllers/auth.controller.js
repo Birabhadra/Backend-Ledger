@@ -2,6 +2,7 @@ import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
 import SendEmail from '../services/email.service.js'
+import tokenBlackListModel from "../models/blacklist.model.js"
 dotenv.config()
 async function userRegisterController(req,res){
     const {email,password,name}=req.body;
@@ -40,7 +41,7 @@ async function userLoginController(req,res){
     }
     const token=jwt.sign({userId:user},process.env.JWT_SECRET,{expiresIn:"3d"})
     res.cookie("token",token)
-    res.status(201).json({
+    res.status(200).json({
         user:{ 
             _id:user._id,
             email:user.email,
@@ -50,7 +51,25 @@ async function userLoginController(req,res){
     })
 }
 
+async function userLogoutController(req,res){
+    const token=req.cookies.token||req.headers.authorization?.split(" ")[1]
+    if (!token){
+        return res.status(200).json({
+            message:"User logged out successfully"
+        })
+    }
+    res.cookie("token","")
+    await tokenBlackListModel.create({
+        token:token
+    })
+    return res.status(200).json({
+        message:"User logged out successfully"
+    })
+
+
+}
 export default{
     userRegisterController,
-    userLoginController
+    userLoginController,
+    userLogoutController
 }
