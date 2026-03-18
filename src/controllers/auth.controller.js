@@ -1,6 +1,7 @@
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken"
 import dotenv from "dotenv"
+import SendEmail from '../services/email.service.js'
 dotenv.config()
 async function userRegisterController(req,res){
     const {email,password,name}=req.body;
@@ -13,7 +14,7 @@ async function userRegisterController(req,res){
     }
     const user=await userModel.create({email,password,name})
     const token=jwt.sign({userId:user},process.env.JWT_SECRET,{expiresIn:"3d"})
-    res.cookie("token",token)
+    res.cookie("token",token);
     res.status(201).json({
         user:{ 
             _id:user._id,
@@ -22,6 +23,7 @@ async function userRegisterController(req,res){
         },
         token
     })
+    await SendEmail.sendRegistrationEmail(name,email)
 }
 
 async function userLoginController(req,res){
